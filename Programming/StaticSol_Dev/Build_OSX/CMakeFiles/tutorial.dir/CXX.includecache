@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/christoph/Universität/Masterarbeit/Programming/StaticSol_Dev/header/rhs.h
+
+/Users/christoph/Universität/Masterarbeit/Programming/StaticSol_Dev/src/main.cpp
+iostream
+-
+fstream
+-
+cmath
+-
+../header/rhs.h
+/Users/christoph/Universität/Masterarbeit/Programming/StaticSol_Dev/header/rhs.h
+gsl/gsl_errno.h
+-
+gsl/gsl_matrix.h
+-
+gsl/gsl_odeiv2.h
+-
+boost/program_options.hpp
+-
+
+/Users/christoph/Universität/Masterarbeit/Programming/StaticSol_Dev/src/rhs.cpp
+../header/rhs.h
+/Users/christoph/Universität/Masterarbeit/Programming/StaticSol_Dev/header/rhs.h
+gsl/gsl_errno.h
+-
+gsl/gsl_matrix.h
+-
+gsl/gsl_odeiv2.h
+-
+iostream
+-
+

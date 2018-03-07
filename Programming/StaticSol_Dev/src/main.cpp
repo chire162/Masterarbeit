@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+//#include <sys/stat.h>
 
 #include "../header/rhs.h"
 
@@ -38,19 +39,18 @@ int main(int ac, char** av){
     fstream file;
 
     //Physikalisch relevante Größen und Simulationsgrößen setzen
-    params.lambda = 0.3147;
+    params.lambda = 0.4;
     params.dlambda = 0.0;
-    double Delta_0 =2.6;
-    double omega_Debye =12.0 * Delta_0;
-    params.len_energies = 3;
+    params.Delta_x = 0.0;
+    params.Delta_y = 0.0;
+    double omega_Debye = 1.0;
+    double Delta_0 = omega_Debye/sinh(1.0/params.lambda);
+    params.len_energies = 10;
     params.energies = new double[params.len_energies];
-
-    double t_i = 0.0, t_f = 10.0;
-    int N_times = 10;
-    double t_step;
+    double t_i = 0.0, t_f = 100.0;
 
     //Abfragen ob irgendwelche parameter übergeben worden sind und setze diese
-
+    //########################################################################
     if(vm.count("help"))
     {
         std::cout << "Basic Command Line Parameter App" << std::endl 
@@ -77,12 +77,13 @@ int main(int ac, char** av){
     if(vm.count("file_name"))
         fname = vm["file_name"].as<string>();
         
-
+    //#########################################################################
    
     //Diskretisierung der Energie-Shell
     for (int i = 0; i < params.len_energies; i++){
 
         params.energies[i] = omega_Debye * (-1.0 + 2.0*i/(params.len_energies -1));
+        cout << params.energies[i] << endl;
     }
 
     //Anfangswert setzen
@@ -90,10 +91,17 @@ int main(int ac, char** av){
 
     for (int i = 0; i < params.len_energies; i++){
 
-        spins[3 * i + 0] = Delta_0; ///sqrt(pow(Delta_0, 2) + pow(params.energies[i],2));
+        spins[3 * i + 0] = Delta_0/sqrt(pow(Delta_0, 2) + pow(params.energies[i],2));
         spins[3 * i + 1] = 0.0;
-        spins[3 * i + 2] = -params.energies[i]; ///sqrt(pow(Delta_0, 2) + pow(params.energies[i],2));
+        spins[3 * i + 2] = -params.energies[i]/sqrt(pow(Delta_0, 2) + pow(params.energies[i],2));
+
+        params.Delta_x += spins[3 * i + 0];
+        params.Delta_y += spins[3 * i + 1];
+
     }
+
+    params.Delta_x *= (params.lambda + params.dlambda)/(2.0 * params.len_energies);
+    params.Delta_y *= (params.lambda + params.dlambda)/(2.0 * params.len_energies);
     //############## SIMULATION ####################
 
     //step1 : Definiere das ODE-System
@@ -110,9 +118,12 @@ int main(int ac, char** av){
 
 
     //Iteration des Systems
-    for (int i = 0; i <= N_times; i++){
+    int N_times = 10000;
+    double t_step;
+    for (int i = 1; i <= N_times; i++){
 
         t_step = i * t_f/N_times;
+
 
         int status = gsl_odeiv2_driver_apply(driver, &t_i, t_step, spins);
 
@@ -122,17 +133,18 @@ int main(int ac, char** av){
             break;
         }
 
-    double Delta_x = 0.0, Delta_y = 0.0;
-    for (int i = 0; i < params.len_energies; i++){
+        params.Delta_x = 0.0;
+        params.Delta_y = 0.0;
+        for (int i = 0; i < params.len_energies; i++){
 
-        Delta_x += spins[i * 3 + 0];
-        Delta_y += spins[i * 3 + 1];
-    }
+            params.Delta_x += spins[i * 3 + 0];
+            params.Delta_y += spins[i * 3 + 1];
+        }
 
-    Delta_x *= (params.lambda + params.dlambda)/(2.0 * params.len_energies);
-    Delta_y *= (params.lambda + params.dlambda)/(2.0 * params.len_energies);
+        params.Delta_x *= (params.lambda + params.dlambda)/(2.0 * params.len_energies);
+        params.Delta_y *= (params.lambda + params.dlambda)/(2.0 * params.len_energies);
 
-    file << t_step << "\t" << Delta_x << "\t" << Delta_y << endl;
+        file << t_step << "\t" << params.Delta_x << "\t" << params.Delta_y << endl;
     }
 
     //clean up
